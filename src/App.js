@@ -1,10 +1,19 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
+import OnboardingPage from './pages/OnboardingPage';
+import MainPage from './pages/MainPage';
 
 function App() {
     return (
-        <div>
-            <h1>김현중 지니어스!</h1>
-        </div>
+        <RecoilRoot>
+            <Router>
+                <Routes>
+                    <Route path="/" element={<OnboardingPage />} />
+                    <Route path="/main" element={<MainPage />} />
+                </Routes>
+            </Router>
+        </RecoilRoot>
     );
 }
 
