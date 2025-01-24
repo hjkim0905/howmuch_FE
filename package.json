@@ -2,7 +2,7 @@
     "name": "howmuch_fe",
     "version": "0.1.0",
     "private": true,
-    "homepage": "https://hjkim0905.github.io",
+    "homepage": "http://walab.handong.edu/eax9952",
     "dependencies": {
         "axios": "^1.7.9",
         "cra-template": "1.2.0",
