@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../hooks/useAuth';
@@ -40,27 +40,22 @@ const BookmarksPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const fetchBookmarks = async () => {
+    const fetchBookmarks = useCallback(async () => {
         try {
             const response = await APIService.bookmarks.getAll(user.uid);
-            if (Array.isArray(response)) {
-                setBookmarks(response);
-                if (response.length > 0) {
-                    setSelectedRestaurant(response[0].restaurant);
-                }
-            } else {
-                console.error('Bookmarks response is not an array:', response);
-                setBookmarks([]);
+            setBookmarks(response);
+            if (response.length > 0) {
+                setSelectedRestaurant(response[0]);
             }
         } catch (error) {
             console.error('Failed to fetch bookmarks:', error);
             setBookmarks([]);
         }
-    };
+    }, [user.uid]);
 
     useEffect(() => {
         fetchBookmarks();
-    }, []);
+    }, [fetchBookmarks]);
 
     const handleDeleteBookmark = async (restaurant) => {
         if (window.confirm('정말로 이 식당을 북마크에서 삭제하시겠습니까?')) {
@@ -72,7 +67,7 @@ const BookmarksPage = () => {
                 if (selectedRestaurant?.id === restaurant.id) {
                     const remainingBookmarks = bookmarks.filter((b) => b.id !== restaurant.id);
                     if (remainingBookmarks.length > 0) {
-                        setSelectedRestaurant(remainingBookmarks[0].restaurant);
+                        setSelectedRestaurant(remainingBookmarks[0]);
                     } else {
                         setSelectedRestaurant(null);
                     }

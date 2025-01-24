@@ -29,18 +29,27 @@ const APIService = {
     // Authentication APIs
     auth: {
         getKakaoToken: async (code) => {
-            const response = await axios.post(KAKAO_TOKEN_URL, null, {
-                params: {
-                    grant_type: 'authorization_code',
-                    client_id: process.env.REACT_APP_KAKAO_REST_API_KEY,
-                    redirect_uri: process.env.REACT_APP_KAKAO_REDIRECT_URI,
-                    code,
-                },
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-            });
-            return response.data;
+            try {
+                const redirectUri = process.env.REACT_APP_KAKAO_REDIRECT_URI;
+                console.log('Using redirect URI:', redirectUri);
+
+                const response = await axios.post(KAKAO_TOKEN_URL, null, {
+                    params: {
+                        grant_type: 'authorization_code',
+                        client_id: process.env.REACT_APP_KAKAO_REST_API_KEY,
+                        redirect_uri: redirectUri,
+                        code: code,
+                    },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                    },
+                });
+
+                return response.data;
+            } catch (error) {
+                console.error('Error getting Kakao token:', error.response?.data || error);
+                throw error;
+            }
         },
 
         getKakaoUserInfo: async (accessToken) => {
@@ -52,36 +61,22 @@ const APIService = {
             return response.data;
         },
 
-        verify: async (code) => {
+        verify: async (kakaoUid) => {
             try {
-                console.log('Starting verification with code:', code);
-
-                // 1. 카카오 토큰 받기
-                const tokenData = await APIService.auth.getKakaoToken(code);
-                console.log('Received Kakao token:', tokenData);
-
-                // 2. 카카오 사용자 정보 받기
-                const userInfo = await APIService.auth.getKakaoUserInfo(tokenData.access_token);
-                console.log('Received Kakao user info:', userInfo);
-
-                // 3. 서버에 사용자 정보 전달하여 검증
-                const kakaoUid = `kakao_${userInfo.id}`;
-                console.log('Sending verification request with kakaoUid:', kakaoUid);
-
-                // 데이터를 객체로 감싸서 전송
-                const response = await api.post('/auth/verify', { uid: kakaoUid });
-                console.log('Server verification response:', response.data);
-
-                if (!response.data || typeof response.data.exists !== 'boolean') {
-                    throw new Error('Invalid server response');
-                }
-
+                console.log('Sending verify request for uid:', kakaoUid);
+                const response = await api.post('/auth/verify', JSON.stringify(kakaoUid), {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log('Raw verify response:', response);
+                console.log('Verify response data:', response.data);
                 return response.data;
             } catch (error) {
                 console.error('Verify API error:', error);
                 if (error.response) {
-                    console.error('Error response:', error.response.data);
-                    console.error('Error status:', error.response.status);
+                    console.error('Verify error response:', error.response.data);
+                    console.error('Verify error status:', error.response.status);
                 }
                 throw error;
             }
@@ -89,14 +84,21 @@ const APIService = {
 
         signup: async (userData) => {
             try {
+                console.log('Sending signup request with data:', userData);
                 const response = await api.post('/auth/signup', userData);
-                // 회원가입 성공 시 verify와 동일한 형식으로 반환
+                console.log('Raw signup response:', response);
+                console.log('Signup response data:', response.data);
+
                 return {
                     exists: true,
-                    user: response.data, // { uid, email, nickname }
+                    user: response.data,
                 };
             } catch (error) {
                 console.error('Signup API error:', error);
+                if (error.response) {
+                    console.error('Signup error response:', error.response.data);
+                    console.error('Signup error status:', error.response.status);
+                }
                 throw error;
             }
         },

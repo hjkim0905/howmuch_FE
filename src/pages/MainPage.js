@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../hooks/useAuth';
@@ -33,7 +33,7 @@ const MainPage = () => {
         }
     };
 
-    const fetchBookmarks = async () => {
+    const fetchBookmarks = useCallback(async () => {
         try {
             const response = await APIService.bookmarks.getAll(user.uid);
             setBookmarks(response);
@@ -41,27 +41,21 @@ const MainPage = () => {
             console.error('Failed to fetch bookmarks:', error);
             setBookmarks([]);
         }
-    };
+    }, [user.uid]);
 
     useEffect(() => {
         fetchBookmarks();
-    }, [user.uid]);
+    }, [fetchBookmarks]);
 
     const handleBookmark = async (restaurant) => {
         try {
             const existingBookmark = bookmarks.find((b) => b.restaurant?.name === restaurant.name);
-            console.log('Current bookmarks:', bookmarks);
-            console.log('Existing bookmark:', existingBookmark);
-            console.log('Restaurant to bookmark:', restaurant);
 
             if (existingBookmark) {
-                console.log('Deleting bookmark with ID:', existingBookmark.id);
                 await APIService.bookmarks.delete(existingBookmark.id);
                 setBookmarks((prevBookmarks) => prevBookmarks.filter((b) => b.id !== existingBookmark.id));
-                console.log('Bookmark deleted');
                 return false;
             } else {
-                console.log('Adding new bookmark');
                 const response = await APIService.bookmarks.add(user.uid, {
                     id: null,
                     name: restaurant.name,
@@ -70,7 +64,6 @@ const MainPage = () => {
                     reviewCount: restaurant.reviewCount,
                     reviews: restaurant.reviews,
                 });
-                console.log('Bookmark added:', response);
                 setBookmarks((prevBookmarks) => [...prevBookmarks, response]);
                 return true;
             }
@@ -140,17 +133,6 @@ const MainPage = () => {
         </Container>
     );
 };
-
-const fadeIn = keyframes`
-    from { 
-        opacity: 0;
-        transform: translate(-50%, -40%);
-    }
-    to { 
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-`;
 
 const float = keyframes`
     0% { transform: translate(0, 0); }

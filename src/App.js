@@ -5,13 +5,13 @@ import OnboardingPage from './pages/OnboardingPage';
 import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
 import SignupPage from './pages/SignupPage';
-import PrivateRoute from './components/PrivateRoute';
 import BookmarksPage from './pages/BookmarksPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
     return (
         <RecoilRoot>
-            <Router>
+            <Router basename="/eax9952">
                 <Routes>
                     <Route path="/" element={<OnboardingPage />} />
                     <Route path="/auth" element={<AuthPage />} />
@@ -19,17 +19,17 @@ function App() {
                     <Route
                         path="/main"
                         element={
-                            <PrivateRoute>
+                            <ProtectedRoute>
                                 <MainPage />
-                            </PrivateRoute>
+                            </ProtectedRoute>
                         }
                     />
                     <Route
                         path="/bookmarks"
                         element={
-                            <PrivateRoute>
+                            <ProtectedRoute>
                                 <BookmarksPage />
-                            </PrivateRoute>
+                            </ProtectedRoute>
                         }
                     />
                 </Routes>

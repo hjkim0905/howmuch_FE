@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import NaverMap from './NaverMap';
-import APIService from '../services/APIService';
 
 const SearchResults = ({
     results: initialResults,
@@ -47,18 +46,6 @@ const SearchResults = ({
             }, 3000);
         } catch (error) {
             console.error('Failed to toggle bookmark:', error);
-        }
-    };
-
-    const handleSearch = async (keyword) => {
-        try {
-            const response = await APIService.search.searchRestaurants(keyword);
-            setResults(response);
-            if (response.length > 0) {
-                setSelectedRestaurant(response[0]);
-            }
-        } catch (error) {
-            console.error('Failed to search restaurants:', error);
         }
     };
 
@@ -280,15 +267,6 @@ const MapContainer = styled.div`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     height: 100%;
-`;
-
-const MapPlaceholder = styled.div`
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #666;
 `;
 
 const ReviewTags = styled.div`
