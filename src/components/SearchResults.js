@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import NaverMap from './NaverMap';
+import APIService from '../services/APIService';
 
 const SearchResults = ({
-    results,
-    selectedRestaurant,
+    results: initialResults,
+    selectedRestaurant: initialSelectedRestaurant,
     onSelectRestaurant,
     onBookmark,
     bookmarks,
     isBookmarkPage = false,
 }) => {
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [results, setResults] = useState(initialResults);
+    const [selectedRestaurant, setSelectedRestaurant] = useState(initialSelectedRestaurant);
+
+    useEffect(() => {
+        setResults(initialResults);
+    }, [initialResults]);
+
+    useEffect(() => {
+        setSelectedRestaurant(initialSelectedRestaurant);
+    }, [initialSelectedRestaurant]);
 
     // 가격순으로 정렬
     const sortedResults = [...results].sort((a, b) => {
@@ -20,65 +31,95 @@ const SearchResults = ({
     });
 
     const handleBookmark = async (restaurant) => {
-        const isBookmarked = bookmarks.includes(restaurant.id);
-        await onBookmark(restaurant);
+        try {
+            // onBookmark의 결과를 받아서 처리
+            const isBookmarkAdded = await onBookmark(restaurant);
 
-        // 토스트 메시지 표시
-        setToast({
-            show: true,
-            message: isBookmarked ? '즐겨찾기가 해제되었습니다.' : '즐겨찾기에 추가되었습니다.',
-        });
+            if (isBookmarkAdded === null) return; // 에러 발생 시 처리하지 않음
 
-        // 3초 후 토스트 메시지 숨기기
-        setTimeout(() => {
-            setToast({ show: false, message: '' });
-        }, 3000);
+            setToast({
+                show: true,
+                message: isBookmarkAdded ? '즐겨찾기에 추가되었습니다.' : '즐겨찾기가 해제되었습니다.',
+            });
+
+            setTimeout(() => {
+                setToast({ show: false, message: '' });
+            }, 3000);
+        } catch (error) {
+            console.error('Failed to toggle bookmark:', error);
+        }
+    };
+
+    const handleSearch = async (keyword) => {
+        try {
+            const response = await APIService.search.searchRestaurants(keyword);
+            setResults(response);
+            if (response.length > 0) {
+                setSelectedRestaurant(response[0]);
+            }
+        } catch (error) {
+            console.error('Failed to search restaurants:', error);
+        }
     };
 
     return (
         <Container>
             {toast.show && <ToastMessage>{toast.message}</ToastMessage>}
             <RestaurantList>
-                {sortedResults.map((restaurant, index) => (
-                    <RestaurantItem key={index} selected={selectedRestaurant?.name === restaurant.name} index={index}>
-                        <RestaurantInfo>
-                            <Header>
-                                <RestaurantName>{restaurant.name}</RestaurantName>
-                                <BookmarkButton
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleBookmark(restaurant);
-                                    }}
-                                    $isBookmarked={isBookmarkPage || bookmarks.includes(restaurant.id)}
-                                >
-                                    {isBookmarkPage ? '🗑️' : bookmarks.includes(restaurant.id) ? '★' : '☆'}
-                                </BookmarkButton>
-                            </Header>
-                            <MenuList>
-                                {restaurant.menus.map((menu, idx) => (
-                                    <MenuItem key={idx}>
-                                        <MenuName>{menu.name}</MenuName>
-                                        <MenuPrice>{menu.price.toLocaleString()}원</MenuPrice>
-                                    </MenuItem>
-                                ))}
-                            </MenuList>
-                            <ReviewTags>
-                                {restaurant.reviews.slice(0, 3).map((review, idx) => (
-                                    <ReviewTag key={idx}>
-                                        {review.length > 30 ? review.slice(0, 30) + '...' : review}
-                                    </ReviewTag>
-                                ))}
-                            </ReviewTags>
-                            <Footer>
-                                <ReviewCount>리뷰 {restaurant.reviewCount}개</ReviewCount>
-                                <MapViewButton onClick={() => onSelectRestaurant(restaurant)}>
-                                    <MapIcon>📍</MapIcon>
-                                    지도에서 위치 보기
-                                </MapViewButton>
-                            </Footer>
-                        </RestaurantInfo>
-                    </RestaurantItem>
-                ))}
+                {sortedResults.map((restaurant, index) => {
+                    const isBookmarked = bookmarks.some((bookmark) => bookmark.restaurant?.name === restaurant.name);
+
+                    return (
+                        <RestaurantItem
+                            key={restaurant.id || index}
+                            selected={selectedRestaurant?.name === restaurant.name}
+                            index={index}
+                            onClick={() => onSelectRestaurant(restaurant)}
+                        >
+                            <RestaurantInfo>
+                                <Header>
+                                    <RestaurantName>{restaurant.name}</RestaurantName>
+                                    <BookmarkButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBookmark(restaurant);
+                                        }}
+                                        $isBookmarked={isBookmarked}
+                                    >
+                                        {isBookmarkPage ? '🗑️' : isBookmarked ? '⭐' : '☆'}
+                                    </BookmarkButton>
+                                </Header>
+                                <MenuList>
+                                    {restaurant.menus.map((menu, idx) => (
+                                        <MenuItem key={idx}>
+                                            <MenuName>{menu.name}</MenuName>
+                                            <MenuPrice>{menu.price.toLocaleString()}원</MenuPrice>
+                                        </MenuItem>
+                                    ))}
+                                </MenuList>
+                                <ReviewTags>
+                                    {restaurant.reviews.slice(0, 3).map((review, idx) => (
+                                        <ReviewTag key={idx}>
+                                            {review.length > 30 ? review.slice(0, 30) + '...' : review}
+                                        </ReviewTag>
+                                    ))}
+                                </ReviewTags>
+                                <Footer>
+                                    <ReviewCount>리뷰 {restaurant.reviewCount}개</ReviewCount>
+                                    <MapViewButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onSelectRestaurant(restaurant);
+                                        }}
+                                    >
+                                        <MapIcon>📍</MapIcon>
+                                        지도에서 위치 보기
+                                    </MapViewButton>
+                                </Footer>
+                            </RestaurantInfo>
+                        </RestaurantItem>
+                    );
+                })}
             </RestaurantList>
             <MapContainer>
                 <NaverMap selectedRestaurant={selectedRestaurant} />
@@ -223,12 +264,12 @@ const BookmarkButton = styled.button`
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: ${(props) => (props.$isBookmarked ? '#ff6b1a' : '#ddd')};
+    color: ${(props) => (props.$isBookmarked ? '#FFD700' : '#ddd')};
     transition: all 0.2s ease;
 
     &:hover {
         transform: scale(1.2);
-        color: ${(props) => (props.$isBookmarked ? '#ff8c37' : '#ff6b1a')};
+        color: ${(props) => (props.$isBookmarked ? '#FFD700' : '#ff6b1a')};
     }
 `;
 

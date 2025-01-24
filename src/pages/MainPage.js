@@ -20,16 +20,10 @@ const MainPage = () => {
         if (keyword.trim()) {
             setIsSearching(true);
             try {
-                const results = await APIService.search(keyword);
-                const sortedResults = [...results].sort((a, b) => {
-                    const minPriceA = Math.min(...a.menus.map((menu) => menu.price));
-                    const minPriceB = Math.min(...b.menus.map((menu) => menu.price));
-                    return minPriceA - minPriceB;
-                });
-
+                const results = await APIService.search.searchRestaurants(keyword);
                 setSearchResults(results);
-                if (sortedResults.length > 0) {
-                    setSelectedRestaurant(sortedResults[0]);
+                if (results.length > 0) {
+                    setSelectedRestaurant(results[0]);
                 }
             } catch (error) {
                 console.error('Search failed:', error);
@@ -41,15 +35,11 @@ const MainPage = () => {
 
     const fetchBookmarks = async () => {
         try {
-            const response = await APIService.bookmarks.getUserBookmarks(user.uid);
-            setBookmarks(
-                response.map((bookmark) => ({
-                    ...bookmark.restaurant,
-                    bookmarkId: bookmark.id,
-                }))
-            );
+            const response = await APIService.bookmarks.getAll(user.uid);
+            setBookmarks(response);
         } catch (error) {
             console.error('Failed to fetch bookmarks:', error);
+            setBookmarks([]);
         }
     };
 
@@ -59,17 +49,34 @@ const MainPage = () => {
 
     const handleBookmark = async (restaurant) => {
         try {
-            const existingBookmark = bookmarks.find((b) => b.id === restaurant.id);
+            const existingBookmark = bookmarks.find((b) => b.restaurant?.name === restaurant.name);
+            console.log('Current bookmarks:', bookmarks);
+            console.log('Existing bookmark:', existingBookmark);
+            console.log('Restaurant to bookmark:', restaurant);
 
             if (existingBookmark) {
-                await APIService.bookmarks.delete(existingBookmark.bookmarkId);
-                setBookmarks(bookmarks.filter((b) => b.id !== restaurant.id));
+                console.log('Deleting bookmark with ID:', existingBookmark.id);
+                await APIService.bookmarks.delete(existingBookmark.id);
+                setBookmarks((prevBookmarks) => prevBookmarks.filter((b) => b.id !== existingBookmark.id));
+                console.log('Bookmark deleted');
+                return false;
             } else {
-                const response = await APIService.bookmarks.create(user.uid, restaurant);
-                setBookmarks([...bookmarks, { ...response.restaurant, bookmarkId: response.id }]);
+                console.log('Adding new bookmark');
+                const response = await APIService.bookmarks.add(user.uid, {
+                    id: null,
+                    name: restaurant.name,
+                    menus: restaurant.menus,
+                    location: restaurant.location,
+                    reviewCount: restaurant.reviewCount,
+                    reviews: restaurant.reviews,
+                });
+                console.log('Bookmark added:', response);
+                setBookmarks((prevBookmarks) => [...prevBookmarks, response]);
+                return true;
             }
         } catch (error) {
             console.error('Bookmark operation failed:', error);
+            return null;
         }
     };
 
@@ -119,7 +126,8 @@ const MainPage = () => {
                     selectedRestaurant={selectedRestaurant}
                     onSelectRestaurant={setSelectedRestaurant}
                     onBookmark={handleBookmark}
-                    bookmarks={bookmarks.map((b) => b.id)}
+                    bookmarks={bookmarks.map((b) => b.restaurant?.id)}
+                    isBookmarkPage={false}
                 />
             )}
 

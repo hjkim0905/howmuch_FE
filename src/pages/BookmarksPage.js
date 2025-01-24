@@ -40,69 +40,49 @@ const BookmarksPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    useEffect(() => {
-        // 더미 데이터 추가
-        const dummyData = [
-            {
-                id: 1,
-                name: '식당 A',
-                menus: [
-                    { name: '메뉴 A1', price: 10000 },
-                    { name: '메뉴 A2', price: 12000 },
-                ],
-                reviews: ['맛있어요!', '서비스가 좋아요!'],
-                reviewCount: 10,
-                location: { x: 129.3583895, y: 36.01415 }, // 포항 위치로 수정
-            },
-            {
-                id: 2,
-                name: '식당 B',
-                menus: [
-                    { name: '메뉴 B1', price: 15000 },
-                    { name: '메뉴 B2', price: 18000 },
-                ],
-                reviews: ['괜찮아요.', '재방문 의사 있어요!'],
-                reviewCount: 5,
-                location: { x: 129.3606895, y: 36.01515 }, // 포항 위치로 수정
-            },
-            {
-                id: 3,
-                name: '식당 C',
-                menus: [
-                    { name: '메뉴 C1', price: 20000 },
-                    { name: '메뉴 C2', price: 22000 },
-                ],
-                reviews: ['별로였어요.', '다시는 안 갈 것 같아요.'],
-                reviewCount: 2,
-                location: { x: 129.3553895, y: 36.01315 }, // 포항 위치로 수정
-            },
-        ];
-        setBookmarks(dummyData);
-        // 첫 번째 요소를 자동으로 선택
-        if (dummyData.length > 0) {
-            setSelectedRestaurant(dummyData[0]);
-        }
-    }, []);
-
-    const handleDeleteBookmark = async (restaurant) => {
+    const fetchBookmarks = async () => {
         try {
-            await APIService.bookmarks.delete(restaurant.bookmarkId);
-            setBookmarks(bookmarks.filter((b) => b.bookmarkId !== restaurant.bookmarkId));
+            const response = await APIService.bookmarks.getAll(user.uid);
+            if (Array.isArray(response)) {
+                setBookmarks(response);
+                if (response.length > 0) {
+                    setSelectedRestaurant(response[0].restaurant);
+                }
+            } else {
+                console.error('Bookmarks response is not an array:', response);
+                setBookmarks([]);
+            }
         } catch (error) {
-            console.error('Failed to delete bookmark:', error);
+            console.error('Failed to fetch bookmarks:', error);
+            setBookmarks([]);
         }
     };
 
-    const bookmarkedRestaurants = bookmarks.map((restaurant) => {
-        return {
-            id: restaurant.id,
-            name: restaurant.name,
-            menus: restaurant.menus,
-            reviews: restaurant.reviews,
-            reviewCount: restaurant.reviewCount,
-            location: restaurant.location,
-        };
-    });
+    useEffect(() => {
+        fetchBookmarks();
+    }, []);
+
+    const handleDeleteBookmark = async (restaurant) => {
+        if (window.confirm('정말로 이 식당을 북마크에서 삭제하시겠습니까?')) {
+            try {
+                await APIService.bookmarks.delete(restaurant.id);
+                setBookmarks((prevBookmarks) => prevBookmarks.filter((b) => b.id !== restaurant.id));
+                alert('북마크가 성공적으로 삭제되었습니다.');
+
+                if (selectedRestaurant?.id === restaurant.id) {
+                    const remainingBookmarks = bookmarks.filter((b) => b.id !== restaurant.id);
+                    if (remainingBookmarks.length > 0) {
+                        setSelectedRestaurant(remainingBookmarks[0].restaurant);
+                    } else {
+                        setSelectedRestaurant(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to delete bookmark:', error);
+                alert('북마크 삭제 중 오류가 발생했습니다.');
+            }
+        }
+    };
 
     return (
         <Container>
@@ -117,13 +97,13 @@ const BookmarksPage = () => {
             </Navbar>
 
             <Content>
-                {bookmarks.length > 0 ? (
+                {bookmarks && bookmarks.length > 0 ? (
                     <SearchResults
-                        results={bookmarkedRestaurants}
+                        results={bookmarks.map((b) => b.restaurant)}
                         selectedRestaurant={selectedRestaurant}
                         onSelectRestaurant={setSelectedRestaurant}
                         onBookmark={handleDeleteBookmark}
-                        bookmarks={bookmarks.map((b) => b.id)}
+                        bookmarks={bookmarks}
                         isBookmarkPage={true}
                     />
                 ) : (
