@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { APIService } from '../services/APIService';
+import APIService from '../services/APIService';
 import { useAuth } from '../hooks/useAuth';
 
 const SignupPage = () => {

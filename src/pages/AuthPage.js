@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { APIService } from '../services/APIService';
+import APIService from '../services/APIService';
 import { useAuth } from '../hooks/useAuth';
 
 const AuthPage = () => {

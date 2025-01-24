@@ -6,6 +6,7 @@ import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
 import SignupPage from './pages/SignupPage';
 import PrivateRoute from './components/PrivateRoute';
+import BookmarksPage from './pages/BookmarksPage';
 
 function App() {
     return (
@@ -20,6 +21,14 @@ function App() {
                         element={
                             <PrivateRoute>
                                 <MainPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/bookmarks"
+                        element={
+                            <PrivateRoute>
+                                <BookmarksPage />
                             </PrivateRoute>
                         }
                     />
