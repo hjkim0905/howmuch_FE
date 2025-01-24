@@ -1,29 +1,30 @@
 import React from 'react';
 import styled from 'styled-components';
+import { KAKAO_AUTH_URL } from '../constants/kakaoAuth';
 
 const LoginButton = () => {
-    return <StyledButton>카카오로 시작하기</StyledButton>;
+    const handleLogin = () => {
+        window.location.href = KAKAO_AUTH_URL;
+    };
+
+    return <StyledButton onClick={handleLogin}>카카오로 시작하기</StyledButton>;
 };
 
 const StyledButton = styled.button`
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
     background-color: #fee500;
+    color: #000000;
     border: none;
     border-radius: 12px;
-    color: #000000;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 320px;
+    transition: background-color 0.2s;
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    &:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background-color: #fdd835;
     }
 `;
 

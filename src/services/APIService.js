@@ -1,78 +1,50 @@
+import axios from 'axios';
+
 // API Service
 const BASE_URL = 'http://44.193.19.114:8080/api';
+
+const api = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+    },
+});
 
 export const APIService = {
     // Search API
     search: async (keyword) => {
-        const response = await fetch(`${BASE_URL}/search`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                accept: '*/*',
-            },
-            body: JSON.stringify({ keyword }),
-        });
-        return response.json();
+        const response = await api.post('/search', { keyword });
+        return response.data;
     },
 
     // Authentication APIs
     auth: {
         signup: async (userData) => {
-            const response = await fetch(`${BASE_URL}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    accept: '*/*',
-                },
-                body: JSON.stringify(userData),
-            });
-            return response.json();
+            const response = await api.post('/auth/signup', userData);
+            return response.data;
         },
 
         verify: async (uid) => {
-            const response = await fetch(`${BASE_URL}/auth/verify`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    accept: '*/*',
-                },
-                body: JSON.stringify(uid),
-            });
-            return response.json();
+            const response = await api.post('/auth/verify', uid);
+            return response.data;
         },
     },
 
     // Bookmark APIs
     bookmarks: {
         create: async (uid, restaurant) => {
-            const response = await fetch(`${BASE_URL}/bookmarks`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    accept: '*/*',
-                },
-                body: JSON.stringify({ uid, restaurant }),
-            });
-            return response.json();
+            const response = await api.post('/bookmarks', { uid, restaurant });
+            return response.data;
         },
 
         getUserBookmarks: async (uid) => {
-            const response = await fetch(`${BASE_URL}/bookmarks/user/${uid}`, {
-                method: 'GET',
-                headers: {
-                    accept: '*/*',
-                },
-            });
-            return response.json();
+            const response = await api.get(`/bookmarks/user/${uid}`);
+            return response.data;
         },
 
         delete: async (bookmarkId) => {
-            await fetch(`${BASE_URL}/bookmarks/${bookmarkId}`, {
-                method: 'DELETE',
-                headers: {
-                    accept: '*/*',
-                },
-            });
+            await api.delete(`/bookmarks/${bookmarkId}`);
         },
     },
 };
