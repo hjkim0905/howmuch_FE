@@ -11,28 +11,24 @@
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
   <title>Single Page Apps for GitHub Pages</title>
   <script type="text/javascript">
-    var segmentCount = 1;
-
     var l = window.location;
-    l.replace(
-      l.protocol +
-      "//" +
-      l.hostname +
-      (l.port ? ":" + l.port : "") +
-      l.pathname
-        .split("/")
-        .slice(0, 1 + segmentCount)
-        .join("/") +
-      "/?p=/" +
-      l.pathname
-        .slice(1)
-        .split("/")
-        .slice(segmentCount)
-        .join("/")
-        .replace(/&/g, "~and~") +
-      (l.search ? "&q=" + l.search.slice(1).replace(/&/g, "~and~") : "") +
-      l.hash
-    );
+
+    // code 파라미터가 있는 경우 처리
+    var code = l.search.match(/code=([^&]*)/);
+    if (code) {
+      window.location.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        '/auth?code=' + code[1]
+      );
+    } else {
+      // 일반적인 경로 처리
+      var segmentCount = 1;
+      window.location.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + segmentCount).join('/') +
+        '/?p=/' + l.pathname.slice(1).split('/').slice(segmentCount).join('/')
+      );
+    }
   </script>
   <script>
     window.NAVER_CLIENT_ID = '%REACT_APP_NAVER_CLIENT_ID%';
