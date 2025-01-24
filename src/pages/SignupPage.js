@@ -20,10 +20,20 @@ const SignupPage = () => {
                 nickname,
             };
             const response = await APIService.auth.signup(userData);
-            login(response);
-            navigate('/main');
+
+            if (response.exists && response.user) {
+                login(response.user);
+                navigate('/main');
+            } else {
+                throw new Error('Signup failed: Invalid response format');
+            }
         } catch (error) {
             console.error('Signup failed:', error);
+            navigate('/', {
+                state: {
+                    error: '회원가입에 실패했습니다. 다시 시도해주세요.',
+                },
+            });
         }
     };
 
@@ -76,6 +86,10 @@ const Container = styled.div`
     justify-content: center;
     align-items: center;
     padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
 `;
 
 const FormWrapper = styled.div`
@@ -157,6 +171,9 @@ const FloatingFoodContainer = styled.div`
     height: 100vh;
     pointer-events: none;
     z-index: 0;
+    top: 0;
+    left: 0;
+    overflow: hidden;
 `;
 
 const FloatingFood = styled.div`

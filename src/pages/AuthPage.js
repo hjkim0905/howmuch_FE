@@ -16,7 +16,7 @@ const AuthPage = () => {
                     const response = await APIService.auth.verify(code);
 
                     if (response.exists) {
-                        // 기존 사용자 로그인
+                        // 기존 사용자
                         login(response.user);
                         navigate('/main');
                     } else {
@@ -29,9 +29,17 @@ const AuthPage = () => {
                         });
                     }
                 } catch (error) {
-                    console.error('Login failed:', error);
-                    navigate('/');
+                    console.error('Login failed:', error.response?.data || error);
+                    const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.';
+                    navigate('/', {
+                        state: {
+                            error: errorMessage,
+                        },
+                    });
                 }
+            } else {
+                console.error('No authorization code found');
+                navigate('/');
             }
         };
 
