@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage';
 import BookmarksPage from './pages/BookmarksPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Walab 배포중
 function App() {
     return (
         <RecoilRoot>
