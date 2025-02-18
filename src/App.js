@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
     return (
         <RecoilRoot>
+            {/* used to set the base URL for the deployment */}
             <Router basename="/eax9952">
                 <Routes>
                     <Route path="/" element={<OnboardingPage />} />
