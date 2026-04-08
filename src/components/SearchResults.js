@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import NaverMap from './NaverMap';
 
@@ -54,7 +54,9 @@ const SearchResults = ({
             {toast.show && <ToastMessage>{toast.message}</ToastMessage>}
             <RestaurantList>
                 {sortedResults.map((restaurant, index) => {
-                    const isBookmarked = bookmarks.some((bookmark) => bookmark.restaurant?.name === restaurant.name);
+                    const isBookmarked = isBookmarkPage
+                        ? bookmarks.some((bookmark) => bookmark.restaurant?.name === restaurant.name)
+                        : bookmarks.includes(restaurant.id);
 
                     return (
                         <RestaurantItem
